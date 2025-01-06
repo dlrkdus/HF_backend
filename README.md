@@ -60,6 +60,7 @@ Redisson의 SortedSet을 활용하여 DB I/O 비용 감소, SortedSet 자료구�
 **`해결`** <br>
 단일/Full Text 인덱스로 검색 성능 73% 개선 <br>
 Full-Text Search 쿼리문이 Hibernate Dialect에 정의되어 있지 않은 문제는 MATCH AGAINST 쿼리문을 커스텀 쿼리로 등록함으로써 해결
+SQL Explain으로 쿼리 분석해 효율 개선 확인
 
 ### [대댓글 조회 JPA N+1 문제 해결](https://velog.io/@dlrkdus/%EB%8C%80%EB%8C%93%EA%B8%80-%EA%B8%B0%EB%8A%A5%EC%97%90%EC%84%9C-N1-%EB%AC%B8%EC%A0%9C-%ED%95%B4%EA%B2%B0%ED%95%98%EA%B8%B0)
 
