@@ -27,6 +27,9 @@
 
 ## 1. 알림 시스템 구현
 
+<img width="617" alt="스크린샷 2025-01-06 오후 9 25 02" src="https://github.com/user-attachments/assets/90bafe16-9779-4e4e-b935-d43709c5e5d4" />
+
+
 ### [Async와 EventListener 기반의 비동기 처리 알림 시스템을 AWS SNS와 SQS 기반의 PUB/SUB 구조로 리팩토링](https://velog.io/@dlrkdus/AWS-SNS%EC%99%80-SQS%EB%A1%9C-%EC%95%8C%EB%9E%8C-%EC%8B%9C%EC%8A%A4%ED%85%9C-%EB%A6%AC%ED%8C%A9%ED%86%A0%EB%A7%81%ED%95%98%EA%B8%B0-1-%EC%84%A4%EA%B3%84)
 
 **`문제`** <br>
