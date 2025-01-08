@@ -6,7 +6,6 @@
 
 
 # 서비스 주요 기능
-<br>
 
 1. 커뮤니티
 2. 통합 검색 기능
@@ -21,6 +20,12 @@
   - AWS EC2, AWS RDS, AWS ElasticCache, AWS SQS, AWS SNS
 - DevOps
   - Jenkins, Docker
+ 
+# 담당 업무 
+- 커뮤니티 기능 (CRUD, 찜하기, 좋아요 포함)
+- 대댓글 기능
+- 검색 기능
+- 알림 기능
 
 
 # 구현 및 문제 해결 과정
