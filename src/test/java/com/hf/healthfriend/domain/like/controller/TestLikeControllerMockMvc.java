@@ -249,47 +249,47 @@ class TestLikeControllerMockMvc {
         );
     }
 
-    @DisplayName("GET /hf/members/{memberId}/likes - 특정 회원이 남긴 좋아요 목록 조회")
-    @Test
-    void getLikesOfSpecificMember() throws Exception {
-        // Given
-        this.likeService.addPostLike(
-                this.sampleMembers.get("member1").getId(),
-                this.samplePosts.get("post1").getPostId()
-        );
-        this.likeService.addPostLike(
-                this.sampleMembers.get("member2").getId(),
-                this.samplePosts.get("post1").getPostId()
-        );
-        this.likeService.addPostLike(
-                this.sampleMembers.get("member1").getId(),
-                this.samplePosts.get("post2").getPostId()
-        );
-
-        Long member1Id = this.sampleMembers.get("member1").getId();
-        Long post1Id = this.samplePosts.get("post1").getPostId();
-        Long post2Id = this.samplePosts.get("post2").getPostId();
-
-        // Then
-        this.mockMvc.perform(
-                MockMvcRequestBuilders.get("/hf/members/{memberId}/likes", member1Id)
-        ).andExpect(
-                MockMvcResultMatchers.content().json(String.format("""
-                        {
-                            "content": [
-                                {
-                                    "memberId": %d,
-                                    "postId": %d
-                                },
-                                {
-                                    "memberId": %d,
-                                    "postId": %d
-                                }
-                            ]
-                        }
-                        """, member1Id, post1Id, member1Id, post2Id))
-        );
-    }
+//    @DisplayName("GET /hf/members/{memberId}/likes - 특정 회원이 남긴 좋아요 목록 조회")
+//    @Test
+//    void getLikesOfSpecificMember() throws Exception {
+//        // Given
+//        this.likeService.addPostLike(
+//                this.sampleMembers.get("member1").getId(),
+//                this.samplePosts.get("post1").getPostId()
+//        );
+//        this.likeService.addPostLike(
+//                this.sampleMembers.get("member2").getId(),
+//                this.samplePosts.get("post1").getPostId()
+//        );
+//        this.likeService.addPostLike(
+//                this.sampleMembers.get("member1").getId(),
+//                this.samplePosts.get("post2").getPostId()
+//        );
+//
+//        Long member1Id = this.sampleMembers.get("member1").getId();
+//        Long post1Id = this.samplePosts.get("post1").getPostId();
+//        Long post2Id = this.samplePosts.get("post2").getPostId();
+//
+//        // Then
+//        this.mockMvc.perform(
+//                MockMvcRequestBuilders.get("/hf/members/{memberId}/likes", member1Id)
+//        ).andExpect(
+//                MockMvcResultMatchers.content().json(String.format("""
+//                        {
+//                            "content": [
+//                                {
+//                                    "memberId": %d,
+//                                    "postId": %d
+//                                },
+//                                {
+//                                    "memberId": %d,
+//                                    "postId": %d
+//                                }
+//                            ]
+//                        }
+//                        """, member1Id, post1Id, member1Id, post2Id))
+//        );
+//    }
 
     @DisplayName("DELETE /hf/likes/{likeId} - 좋아요 취소")
     @Test

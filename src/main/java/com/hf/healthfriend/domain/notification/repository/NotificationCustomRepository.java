@@ -1,10 +1,9 @@
 package com.hf.healthfriend.domain.notification.repository;
 
-import com.hf.healthfriend.domain.notification.constant.NotificationGetType;
-import com.hf.healthfriend.domain.notification.dto.NotificationResponse;
-import java.util.List;
+import com.hf.healthfriend.domain.notification.constant.NotificationType;
+import com.hf.healthfriend.domain.notification.dto.NotificationListResponse;
 import org.springframework.data.domain.Pageable;
 
 public interface NotificationCustomRepository {
-    List<NotificationResponse> getList(NotificationGetType notificationGetType, Pageable pageable);
+    NotificationListResponse getList(NotificationType notificationType, Pageable pageable);
 }

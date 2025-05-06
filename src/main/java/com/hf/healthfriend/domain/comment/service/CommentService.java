@@ -19,7 +19,6 @@ import com.hf.healthfriend.domain.post.repository.PostRepository;
 import com.hf.healthfriend.global.file.FileUrlResolver;
 import java.util.ArrayList;
 import java.util.Map;
-import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -48,13 +47,9 @@ public class CommentService {
 
         Comment parentComment = null;
         if (requestDto.getParentCommentId()!=null){
-            if(!commentJpaRepository.existsByCommentIdAndIsDeletedFalse(requestDto.getParentCommentId())){
-                throw new CommentException(CommentErrorCode.PARENT_COMMENT_NOT_FOUND,HttpStatus.NOT_FOUND,
-                        requestDto.getParentCommentId()+"번 댓글은 존재하지 않는 댓글입니다.");
-            }
-            parentComment = Optional.of(requestDto.getParentCommentId())
-                    .map(parentId -> Comment.builder().commentId(parentId).build())
-                    .orElse(null);
+            parentComment = commentJpaRepository.findById(requestDto.getParentCommentId())
+                    .orElseThrow(() -> new CommentException(CommentErrorCode.PARENT_COMMENT_NOT_FOUND,HttpStatus.NOT_FOUND,
+                            requestDto.getParentCommentId()+"번 댓글은 존재하지 않는 댓글입니다."));
         }
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new CommentException(CommentErrorCode.POST_NOT_FOUND));
@@ -94,7 +89,7 @@ public class CommentService {
         commentJpaRepository.deleteAllReplies(commentId);
         // 부모 댓글 soft delete
         commentJpaRepository.softDeleteById(commentId);
-        postRepository.decrementCommentsCountByCommentId(commentId);
+        postRepository.decrementCommentsCountByParentCommentId(commentId);
     }
 
     public List<CommentDto> getCommentsOfPost(Long postId, CommentSortType sortType) {

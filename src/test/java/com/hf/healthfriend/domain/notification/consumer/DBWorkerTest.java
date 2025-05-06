@@ -1,7 +1,6 @@
 package com.hf.healthfriend.domain.notification.consumer;
 
 import com.hf.healthfriend.domain.notification.constant.NotificationType;
-import com.hf.healthfriend.domain.notification.consumer.DBWorker;
 import com.hf.healthfriend.domain.notification.dto.NotificationEvent;
 import com.hf.healthfriend.domain.notification.entity.Notification;
 import com.hf.healthfriend.domain.notification.repository.NotificationRepository;

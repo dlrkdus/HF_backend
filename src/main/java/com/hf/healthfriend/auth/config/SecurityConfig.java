@@ -47,12 +47,19 @@ public class SecurityConfig {
             "/hf/files/**",
             "/files/**",
             "/hf/current-state",
-
-            // TODO: 해당 endpoint 확인 후 삭제할 수 있음
-            "/login",
-            "/api/member/**",
-            "/api/jwt/reissue",
-            "/v3/**"
+            "/hf/portfolio",
+            "/hf/comments/**",
+            "/hf/connect/sse",
+            "/hf/posts/*/comments",
+            "/hf/members/{memberId:\\d+}",
+            "/hf/members/{memberId:\\d+}/profile",
+            "/hf/members/search",
+            "/hf/posts/*",
+            "/hf/popularList",
+            "/hf/list",
+            "/hf/search",
+            "/v3/**",
+            "/test/**"
     };
 
     private final ObjectMapper objectMapper;
@@ -85,13 +92,16 @@ public class SecurityConfig {
     public SecurityFilterChain domainSecurityFilterChain(HttpSecurity http, OpaqueTokenIntrospector opaqueTokenIntrospector) throws Exception {
         return
                 http
-                        .cors(corsCustomizer ->corsCustomizer.configurationSource(corsConfigurationSource()))
+                        .cors(corsCustomizer -> corsCustomizer.configurationSource(corsConfigurationSource()))
                         .csrf(AbstractHttpConfigurer::disable) // TODO: 추후 보안 정책에 따라 CSRF 방지 활용 가능
                         .formLogin(AbstractHttpConfigurer::disable)
                         .httpBasic(AbstractHttpConfigurer::disable)
                         .authorizeHttpRequests((auth) -> auth
                                 .requestMatchers(WHITE_LIST).permitAll()
                                 .requestMatchers(HttpMethod.POST, "/hf/members").hasAnyRole(
+                                        Role.ROLE_NON_MEMBER.roleName(), Role.ROLE_MEMBER.roleName()
+                                )
+                                .requestMatchers(HttpMethod.GET, "/hf/members/is-duplicate-nickname").hasAnyRole(
                                         Role.ROLE_NON_MEMBER.roleName(), Role.ROLE_MEMBER.roleName()
                                 )
                                 .anyRequest().hasAnyRole(Role.ROLE_ADMIN.roleName(), Role.ROLE_MEMBER.roleName())
@@ -109,7 +119,7 @@ public class SecurityConfig {
     @Bean
     @Profile("no-auth")
     public SecurityFilterChain noAuthCheckSecurityFilterChain(HttpSecurity http, JsonParserFilter jsonParserFilter) throws Exception {
-        return http.cors(corsCustomizer ->corsCustomizer.configurationSource(corsConfigurationSource()))
+        return http.cors(corsCustomizer -> corsCustomizer.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
@@ -125,8 +135,8 @@ public class SecurityConfig {
         config.setAllowedOrigins(Collections.singletonList(this.clientOrigin));
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         config.setAllowCredentials(true);
-        config.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Accept", "Cookie"));
-        config.setExposedHeaders(Arrays.asList("Authorization"));
+        config.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Accept", "Cookie", "Upgrade"));
+        config.setExposedHeaders(Arrays.asList("Authorization", "Upgrade", "Set-Cookie"));
         config.setMaxAge(3600L); // 1시간
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

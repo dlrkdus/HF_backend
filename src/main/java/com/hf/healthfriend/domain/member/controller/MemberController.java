@@ -1,12 +1,12 @@
 package com.hf.healthfriend.domain.member.controller;
 
+import com.hf.healthfriend.auth.constant.CookieConstants;
 import com.hf.healthfriend.domain.member.controller.schema.ProfileResponseSchema;
 import com.hf.healthfriend.domain.member.dto.MemberDto;
 import com.hf.healthfriend.domain.member.dto.request.MemberCreationRequestDto;
 import com.hf.healthfriend.domain.member.dto.request.MemberUpdateRequestDto;
-import com.hf.healthfriend.domain.member.dto.request.MembersRecommendRequest;
 import com.hf.healthfriend.domain.member.dto.response.MemberCreationResponseDto;
-import com.hf.healthfriend.domain.member.dto.response.MemberRecommendResponse;
+import com.hf.healthfriend.domain.member.dto.response.MemberListResponse;
 import com.hf.healthfriend.domain.member.dto.response.MemberSearchResponse;
 import com.hf.healthfriend.domain.member.dto.response.MemberUpdateResponseDto;
 import com.hf.healthfriend.domain.member.dto.response.ProfileResponseDto;
@@ -16,6 +16,7 @@ import com.hf.healthfriend.global.spec.ApiErrorResponse;
 import com.hf.healthfriend.global.spec.schema.BooleanTypeSchema;
 import com.hf.healthfriend.global.spec.schema.MemberCreationResponseSchema;
 import com.hf.healthfriend.global.spec.schema.MemberResponseSchema;
+import com.hf.healthfriend.global.util.HttpCookieUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -25,13 +26,11 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import jakarta.annotation.Nullable;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.WebDataBinder;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
@@ -45,6 +44,7 @@ import java.util.List;
 public class MemberController {
 
     private final MemberService memberService;
+    private final HttpCookieUtils httpCookieUtils;
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(
@@ -102,7 +102,10 @@ public class MemberController {
             @ApiResponse(
                     description = "회원 생성 성공",
                     responseCode = "201",
-                    headers = @Header(name = "Location", description = "생성된 회원의 리소스 경로"),
+                    headers = {
+                            @Header(name = "Location", description = "생성된 회원의 리소스 경로"),
+                            @Header(name = HttpHeaders.SET_COOKIE, description = "is_new_member 쿠키를 false로 설정")
+                    },
                     content = @Content(
                             schema = @Schema(implementation = MemberCreationResponseSchema.class),
                             examples = @ExampleObject("""
@@ -175,7 +178,11 @@ public class MemberController {
         log.info("Request Body:\n{}", requestBody);
 
         MemberCreationResponseDto result = this.memberService.createMember(requestBody);
+        ResponseCookie existsMember =
+                this.httpCookieUtils.buildJavaScriptAccessibleResponseCookie(CookieConstants.COOKIE_NAME_IS_NEW_MEMBER.getString(),
+                        String.valueOf(false));
         return ResponseEntity.created(new URI("/hr/members/" + result.getMemberId()))
+                .header(HttpHeaders.SET_COOKIE, existsMember.toString())
                 .body(ApiBasicResponse.of(result, HttpStatus.CREATED));
     }
 
@@ -216,6 +223,7 @@ public class MemberController {
                             schema = @Schema(implementation = MemberUpdateRequestDto.class),
                             examples = @ExampleObject("""
                                     {
+                                        "nickname": "new-nickname",
                                         "cd1": "10",
                                         "cd2": "111",
                                         "cd3": "123",
@@ -284,15 +292,6 @@ public class MemberController {
                                                                                   @RequestBody @Valid MemberUpdateRequestDto dto) {
         MemberUpdateResponseDto resultDto = this.memberService.updateMember(memberId, dto);
         return ResponseEntity.ok(ApiBasicResponse.of(resultDto, HttpStatus.OK));
-    }
-
-    @Operation(summary = "멤버 추천 목록 조회", responses = {
-            @ApiResponse(responseCode = "200", description = "멤버 추천 목록 조회 성공"),
-            @ApiResponse(responseCode = "400", description = "멤버 추천 목록 조회 실패")
-    })
-    @GetMapping("/recommend")
-    public ResponseEntity<ApiBasicResponse<List<MemberRecommendResponse>>> getRecommendMembers(MembersRecommendRequest request, int page) {
-        return ResponseEntity.ok(ApiBasicResponse.of(this.memberService.recommendMember(request, page), HttpStatus.OK));
     }
 
     @GetMapping("/{memberId}/profile")
@@ -366,7 +365,10 @@ public class MemberController {
                                                             }
                                                         ]
                                                     },
-                                                    "averageReviewScore": 3.5
+                                                    "averageReviewScore": 3.5,
+                                                    "matchingCount": 34,
+                                                    "reviewCount": 34,
+                                                    "wishedCount": 25
                                                 }
                                             }
                                             """)
@@ -405,10 +407,19 @@ public class MemberController {
             @ApiResponse(responseCode = "400", description = "프로필 검색 목록 조회 실패")
     })
     @GetMapping("/search")
-    public ResponseEntity<ApiBasicResponse<List<MemberSearchResponse>>> getSearchedMembers(@RequestParam String keyword,
-                                                                                           @RequestParam(value = "page", defaultValue = "1") int page,
-                                                                                           @RequestParam(defaultValue = "3") int size) {
-        return ResponseEntity.ok(ApiBasicResponse.of(this.memberService.searchMembers(keyword,page,size), HttpStatus.OK));
+    public ResponseEntity<ApiBasicResponse<MemberSearchResponse>> getSearchedMembers(@RequestParam(value = "page", defaultValue = "1") int page,
+                                                                                     @RequestParam int size,
+                                                                                     @RequestParam(required = false) String cd1,
+                                                                                     @RequestParam(required = false) String cd2,
+                                                                                     @RequestParam(required = false) String cd3,
+                                                                                     @RequestParam(required = false) List<String> fitnessLevels,
+                                                                                     @RequestParam(required = false) List<String> companionStyles,
+                                                                                     @RequestParam(required = false) List<String> fitnessEagernesses,
+                                                                                     @RequestParam(required = false) List<String> fitnessKinds,
+                                                                                     @RequestParam(required = false) List<String> fitnessObjectives,
+                                                                                     @RequestParam(required = false) String memberSortType,
+                                                                                     @RequestParam @Nullable String keyword) {
+        return ResponseEntity.ok(ApiBasicResponse.of(this.memberService.searchMembers(cd1,cd2,cd3,fitnessLevels,companionStyles,fitnessEagernesses,fitnessKinds,fitnessObjectives,memberSortType,keyword,page,size), HttpStatus.OK));
     }
 
     @GetMapping("/is-duplicate-nickname")
@@ -447,5 +458,15 @@ public class MemberController {
     )
     public ResponseEntity<ApiBasicResponse<Boolean>> checkNicknameDuplicate(@RequestParam("nickname") String nickname) {
         return ResponseEntity.ok(ApiBasicResponse.of(this.memberService.checkDuplicateOfNickname(nickname), HttpStatus.OK));
+    }
+
+    @DeleteMapping("/{memberId}")
+    @Operation(summary = "회원 탈퇴", responses = {
+            @ApiResponse(description = "회원 탈퇴 성공", responseCode = "200"),
+            @ApiResponse(description = "해당 회원이 없음", responseCode = "404")
+    })
+    public ResponseEntity<ApiBasicResponse<Void>> deleteMember(@PathVariable("memberId") Long memberId) {
+        this.memberService.deleteMember(memberId);
+        return ResponseEntity.ok(ApiBasicResponse.of(HttpStatus.OK, "회원 탈퇴 성공"));
     }
 }

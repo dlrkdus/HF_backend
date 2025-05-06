@@ -7,29 +7,38 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
-import software.amazon.awssdk.services.sns.SnsClient;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+import software.amazon.awssdk.services.sqs.SqsAsyncClient;
 
 @Component
 @RequiredArgsConstructor
 @Slf4j
 public class NotificationPublisher {
-    private final SnsClient snsClient;
+
+    private final SqsAsyncClient sqsAsyncClient;
     private final JsonUtils jsonUtils;
 
-    @Value("${aws.sns.topicArn}")
-    private String topicArn;
+    @Value("${aws.sqs.alarmQueueUrl}")
+    private String alarmQueueUrl;
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void publishNotification(Long memberId, NotificationType type, String actor, Long targetId) {
         NotificationEvent event = new NotificationEvent(memberId, type, actor, targetId);
         String message = jsonUtils.serialize(event);
-        snsClient.publish(builder -> builder
-                .topicArn(topicArn)
-                .message(message)
-        );
-        log.info("SNS에 알림 이벤트 퍼블리싱: memberId={}, type={}, actor={}, targetId={}",
-                memberId, type, actor, targetId);
+
+        // 트랜잭션이 커밋된 이후에 실행되도록 등록
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                sqsAsyncClient.sendMessage(builder -> builder
+                        .queueUrl(alarmQueueUrl)
+                        .messageBody(message)
+                );
+
+                log.info("SQS에 알림 이벤트 퍼블리싱 (트랜잭션 커밋 후): memberId={}, type={}, actor={}, targetId={}",
+                        memberId, type, actor, targetId);
+            }
+        });
     }
 }
+

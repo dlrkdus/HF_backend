@@ -16,7 +16,7 @@ public class SseController {
 
     private final NotificationSSEService notificationSseService;
 
-    @GetMapping(value = "/connect/sse", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @GetMapping(value = "/hf/connect/sse", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public ResponseEntity<SseEmitter> connect(
             @RequestParam Long memberId,
             @RequestHeader(value = "Last-Event-ID", required = false, defaultValue = "") String lastEventId) {

@@ -24,7 +24,7 @@ public record PostGetResponse(
         Long commentCount,
         List<CommentDto> comments
 ) {
-    public static PostGetResponse of(Post post, List<CommentDto> comments, String imagePath, String writerProfileImageUrl) {
+    public static PostGetResponse of(Post post, List<CommentDto> comments,Long viewCountFromRedis ,String imagePath, String writerProfileImageUrl) {
         return PostGetResponse.builder()
                 .postId(post.getPostId())
                 .writerId(post.getMember().getId())
@@ -36,7 +36,7 @@ public record PostGetResponse(
                 .content(post.getContent())
                 .imagePath(imagePath)
                 .createDate(post.getCreationTime())
-                .viewCount(post.getViewCount())
+                .viewCount(viewCountFromRedis)
                 .likeCount(post.getLikesCount())
                 .commentCount(post.getCommentsCount())
                 .comments(comments)

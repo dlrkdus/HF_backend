@@ -13,6 +13,7 @@ import com.hf.healthfriend.domain.matching.repository.MatchingRepository;
 import com.hf.healthfriend.domain.member.entity.Member;
 import com.hf.healthfriend.domain.member.exception.MemberNotFoundException;
 import com.hf.healthfriend.domain.member.repository.MemberRepository;
+import com.hf.healthfriend.global.concurrency.SynchronizedOperation;
 import com.hf.healthfriend.domain.notification.service.NotificationPublishService;
 import com.hf.healthfriend.domain.notification.service.NotificationService;
 import lombok.RequiredArgsConstructor;
@@ -51,6 +52,7 @@ public class MatchingService {
     private final MemberRepository memberRepository;
     private final NotificationPublishService notificationPublishService;
 
+    @SynchronizedOperation
     public Long requestMatching(MatchingRequestDto requestDto) {
         if (this.matchingRepository.existsDuplicateMatchingRequest(requestDto.getRequesterId(), LocalDate.now())) {
             throw new OutOfLimitMatchingRequestException("매칭 중복");

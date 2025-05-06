@@ -12,7 +12,6 @@ import java.io.IOException;
 import java.io.InputStream;
 
 @Slf4j
-@ConditionalOnProperty("local-file-upload")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/hf/files")

@@ -40,7 +40,7 @@ public class RestTemplateKakaoTokenSupport implements KakaoOAuth2TokenSupport {
     private final String kakaoClientId;
 
     public RestTemplateKakaoTokenSupport(RestTemplate restTemplate,
-                                         @Value("${secret.oauth2.kakao.client-id.rest-api}") String kakaoClientId) {
+                                         @Value("${secret.oauth2.kakao.client-id}") String kakaoClientId) {
         this.restTemplate = restTemplate;
         this.kakaoClientId = kakaoClientId;
     }

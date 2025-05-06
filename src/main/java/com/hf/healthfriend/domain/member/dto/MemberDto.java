@@ -44,8 +44,9 @@ public class MemberDto {
     private FitnessKind fitnessKind;
     private Long matchedCount;
     private Tier tier;
+    private Boolean isWished;
 
-    public static MemberDto of(Member member, String profileImageUrl) {
+    public static MemberDto of(Member member, String profileImageUrl, Boolean isWished) {
         return MemberDto.builder()
                 .memberId(member.getId())
                 .loginId(member.getLoginId())
@@ -68,6 +69,7 @@ public class MemberDto {
                 .fitnessKind(member.getFitnessKind())
                 .matchedCount(member.getMatchedCount())
                 .tier(member.getTier())
+                .isWished(isWished)
                 .build();
     }
 }

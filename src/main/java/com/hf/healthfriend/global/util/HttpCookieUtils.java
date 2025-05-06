@@ -29,4 +29,6 @@ public interface HttpCookieUtils {
      * @return 클라이언트에 저장할 ResponseCookie 정보. HTTP-only 쿠키가 아니다.
      */
     ResponseCookie buildJavaScriptAccessibleResponseCookie(String name, String value);
+
+    ResponseCookie buildCookieInvalidator(String name);
 }

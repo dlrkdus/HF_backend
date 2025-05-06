@@ -30,4 +30,16 @@ public class SecuredHttpCookieUtils implements HttpCookieUtils {
                 .secure(true) // localhost 환경에서는 secure 쿠키도 전달됨
                 .build();
     }
+
+    @Override
+    public ResponseCookie buildCookieInvalidator(String name) {
+        return ResponseCookie.from(name, "")
+                .httpOnly(true)
+                .maxAge(0)
+                .domain(this.domain)
+                .path("/")
+                .sameSite("None")
+                .secure(true) // localhost 환경에서는 secure 쿠키도 전달됨
+                .build();
+    }
 }

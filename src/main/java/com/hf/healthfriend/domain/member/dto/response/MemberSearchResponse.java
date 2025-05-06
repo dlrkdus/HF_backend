@@ -1,19 +1,11 @@
 package com.hf.healthfriend.domain.member.dto.response;
 
-import lombok.AllArgsConstructor;
+import java.util.List;
 import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Builder
-@AllArgsConstructor
-@NoArgsConstructor
-@Getter
-@Setter
-public class MemberSearchResponse{
-    private String profileImageUrl;
-    private String introduction;
-    private String nickname;
-    private Long followerCount;
+public record MemberSearchResponse(
+        List<MemberListResponse> memberList,
+        Long totalPageSize
+) {
 }

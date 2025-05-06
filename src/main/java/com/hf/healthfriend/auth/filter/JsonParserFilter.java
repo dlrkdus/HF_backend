@@ -59,7 +59,7 @@ public class JsonParserFilter extends OncePerRequestFilter {
             return;
         }
 
-        Optional<Member> memberOp = this.memberRepository.findByEmail(email);
+        Optional<Member> memberOp = this.memberRepository.findNotDeletedMemberByEmail(email);
         if (memberOp.isEmpty()) {
             log.info("No such member of email: {}", email);
             filterChain.doFilter(request, response);

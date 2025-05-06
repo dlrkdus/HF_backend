@@ -67,7 +67,7 @@ public class NotificationSSEService {
         if (emitter != null) {
             try {
                 emitter.send(SseEmitter.event()
-                        .name("알림을 전송합니다. emitterId = " + emitterId)
+                        .name("alarm")
                         .id(emitterId)
                         .data(alarm));
                 log.info("알림 전송 성공: emitterId={}, alarm={}", emitterId, alarm);

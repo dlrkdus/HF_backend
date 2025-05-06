@@ -32,7 +32,10 @@ public abstract class Coupon {
     @Temporal(TemporalType.TIMESTAMP)
     private LocalDateTime creationTime = LocalDateTime.now();
 
+    @Column(name = "is_used")
     private boolean used = false;
+
+    @Column(name = "is_read")
     private boolean read = false;
 
     protected Coupon(Member receiver, LocalDateTime expiration) {

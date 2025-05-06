@@ -1,20 +1,23 @@
-AWS_ACCESS_KEY_ID=$1
-AWS_REGION=$2
-AWS_SECRET_ACCESS_KEY=$3
-AWS_SQS_ALARM_QUEUE_URL=$4
-AWS_SQS_DB_QUEUE_URL=$5
+BUILD_POSITION=$1
+MODE=$2
 
-MODE=$6:-auth
-
-docker container stop hf-backend-app || true
-docker container rm hf-backend-app || true
-
-./gradlew clean build -x test
-
-docker build -t hf-backend .
+# docker container stop hf-backend-app || true
+# docker container rm hf-backend-app || true
 
 if [ "$MODE" = "no-auth" ]; then
-  docker run --name hf-backend-app -p 8080:8080 -dit --rm -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID -e AWS_REGION=$AWS_REGION -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY -e AWS_SQS_ALARM_QUEUE_URL=$AWS_SQS_ALARM_QUEUE_URL -e AWS_SQS_DB_QUEUE_URL=$AWS_SQS_DB_QUEUE_URL --network=hf-net hf-backend
+  docker-compose -f docker-compose.yml --env-file envs --profile blue-noauth down --rmi all
 else
-  docker run --name hf-backend-app -p 8080:8080 -dit --rm -e SPRING_PROFILES_ACTIVE=local-dev,secret,constants,priv -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID -e AWS_REGION=$AWS_REGION -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY -e AWS_SQS_ALARM_QUEUE_URL=$AWS_SQS_ALARM_QUEUE_URL -e AWS_SQS_DB_QUEUE_URL=$AWS_SQS_DB_QUEUE_URL --network=hf-net hf-backend
+  docker-compose -f docker-compose.yml --env-file envs --profile blue down --rmi all
+fi
+
+if [ "$BUILD_POSITION" = "no-container" ]; then
+  ./gradlew clean build -x test
+fi
+
+docker build -t rudeh1253/hf-backend:latest .
+
+if [ "$MODE" = "no-auth" ]; then
+  docker-compose -f docker-compose.yml --env-file envs --profile blue-noauth up -d --build
+else
+  docker-compose -f docker-compose.yml --env-file envs --profile blue up -d --build
 fi

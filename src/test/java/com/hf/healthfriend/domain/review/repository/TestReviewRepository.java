@@ -9,6 +9,7 @@ import com.hf.healthfriend.domain.review.constants.EvaluationType;
 import com.hf.healthfriend.domain.review.entity.Review;
 import com.hf.healthfriend.domain.review.entity.ReviewEvaluation;
 import com.hf.healthfriend.domain.review.repository.dto.RevieweeStatisticsQueryResultDto;
+import com.hf.healthfriend.testutil.MysqlTestcontainerConfig;
 import com.hf.healthfriend.testutil.SampleEntityGenerator;
 import com.hf.healthfriend.testutil.TestConfig;
 import lombok.extern.slf4j.Slf4j;
@@ -29,13 +30,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @Slf4j
 @DataJpaTest
-@ActiveProfiles({
-        "local-dev",
-        "secret",
-        "priv",
-        "constants"
+@Import({
+        TestConfig.class,
+        MysqlTestcontainerConfig.class
 })
-@Import(TestConfig.class)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class TestReviewRepository {
 

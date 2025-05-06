@@ -9,11 +9,11 @@ import java.util.List;
 @Builder
 public record ProfileResponseDto(
         Long memberId,
-// TODO: 찜하기 기능이 머지되면 추가
-//        Long wishedCount,
         String introduction,
         List<SpecDto> specs,
         SimpleReviewResponseDto reviews,
-        Double averageReviewScore
-) {
+        Double averageReviewScore,
+        long matchingCount,
+        long reviewCount,
+        Long wishedCount) {
 }

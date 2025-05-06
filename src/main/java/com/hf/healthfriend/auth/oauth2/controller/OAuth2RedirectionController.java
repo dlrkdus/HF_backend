@@ -11,7 +11,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.headers.Header;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
@@ -38,17 +37,19 @@ import java.util.Map;
 @RestController
 @RequestMapping("/oauth/code")
 public class OAuth2RedirectionController {
-    private static final String REDIRECTION_PATH = "/register/exercise-style";
+    private static final String REDIRECTION_PATH = "/agreement";
 
     private final Map<AuthServer, OAuth2TokenSupport> tokenSupportByName;
     private final HttpCookieUtils cookieUtils;
     private final MemberService memberService;
     private final String clientOrigin;
+    private final String backendOrigin;
 
     public OAuth2RedirectionController(List<OAuth2TokenSupport> oAuth2TokenSupports,
                                        HttpCookieUtils cookieUtils,
                                        MemberService memberService,
-                                       @Value("${client.origin}") String clientOrigin) {
+                                       @Value("${client.origin}") String clientOrigin,
+                                       @Value("${backend.origin}") String backendOrigin) {
         this.tokenSupportByName = new HashMap<>();
         for (OAuth2TokenSupport tokenSupport : oAuth2TokenSupports) {
             for (AuthServer authServer : AuthServer.values()) {
@@ -61,6 +62,7 @@ public class OAuth2RedirectionController {
         this.cookieUtils = cookieUtils;
         this.memberService = memberService;
         this.clientOrigin = clientOrigin;
+        this.backendOrigin = backendOrigin;
     }
 
     @InitBinder
@@ -110,9 +112,9 @@ public class OAuth2RedirectionController {
             )
     })
     @GetMapping("/kakao")
-    public ResponseEntity<Void> get(@RequestParam("code") String code, HttpServletRequest request) {
+    public ResponseEntity<Void> get(@RequestParam("code") String code) {
         log.info("Kakao Login has been requested");
-        return doTheSameThing(AuthServer.KAKAO, code, request.getRequestURL().toString());
+        return doTheSameThing(AuthServer.KAKAO, code, this.backendOrigin + "/oauth/code/kakao");
     }
 
     @Operation(summary = "구글 로그인 Redirect URI")
@@ -157,9 +159,9 @@ public class OAuth2RedirectionController {
             )
     })
     @GetMapping("/google")
-    public ResponseEntity<Void> getGoogle(@RequestParam("code") String code, HttpServletRequest request) {
+    public ResponseEntity<Void> getGoogle(@RequestParam("code") String code) {
         log.info("Google Login has been requested");
-        return doTheSameThing(AuthServer.GOOGLE, code, request.getRequestURL().toString());
+        return doTheSameThing(AuthServer.GOOGLE, code, this.backendOrigin + "/oauth/code/google");
     }
 
     private ResponseEntity<Void> doTheSameThing(AuthServer authServer, String code, String redirectUri) {

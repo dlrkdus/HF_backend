@@ -152,6 +152,8 @@ public class ReviewService {
         }
 
         Map<EvaluationType, ReviewResponseDto> reviewResponseDtoByEvaluationType = new HashMap<>();
+        reviewResponseDtoByEvaluationType.put(EvaluationType.GOOD, new ReviewResponseDto(0L, new ArrayList<>()));
+        reviewResponseDtoByEvaluationType.put(EvaluationType.NOT_GOOD, new ReviewResponseDto(0L, new ArrayList<>()));
         for (Map.Entry<EvaluationType, Map<Integer, Long>> entry1 : evaluationDetailCountsByEvaluationType.entrySet()) {
             List<ReviewDetailPerEvaluationType> reviewDetailsPerEvaluationType = new ArrayList<>();
             long totalCountPerEvaluationType = 0L;

@@ -60,7 +60,6 @@ public class LikeService {
             );
             try {
                 Like savedLike = this.likeRepository.save(like);
-                // TODO 동시성 처리 필요
                 postRepository.incrementLikeCount(postId);
                 notificationPublishService.publishPostLikeNot(memberId, postId);
                 savePopularPost(postId);
@@ -75,7 +74,6 @@ public class LikeService {
                 throw new DuplicatePostLikeException(postId, memberId);
             }
             like.uncancel();
-            // TODO 동시성 처리 필요
             postRepository.incrementLikeCount(postId);
             savePopularPost(postId);
             notificationPublishService.publishPostLikeNot(memberId, postId);

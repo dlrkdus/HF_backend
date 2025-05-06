@@ -1,0 +1,25 @@
+spring:
+  datasource:
+    url: ${JDBC_URL}
+    username: ${JDBC_USERNAME}
+    password: ${JDBC_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        show_sql: true
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+
+  cloud:
+    aws:
+      s3:
+        bucket: ${S3_BUCKET}
+
+client:
+  domain: healthfriend.site
+  origin: https://www.healthfriend.site
+
+backend:
+  origin: https://api.healthfriend.site

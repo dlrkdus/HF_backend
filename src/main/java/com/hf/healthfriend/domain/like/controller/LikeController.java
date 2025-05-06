@@ -131,25 +131,25 @@ public class LikeController {
         );
     }
 
-    @GetMapping("/members/{memberId}/{postId}/likes")
-    @Operation(
-            summary = "특정 회원이 글에 남긴 좋아요 조회",
-            responses = {
-                    @ApiResponse(
-                            description = "조회 성공",
-                            content = @Content(schema = @Schema(implementation = LikeDtoListSchema.class))
-                    )
-            }
-    )
-    public ResponseEntity<ApiBasicResponse<List<PostLikeDto>>> getPostLikesOfSingleMember(@PathVariable("memberId") Long memberId) {
-        List<PostLikeDto> responseDto = this.likeService.getPostLikeOfMember(memberId);
-        return ResponseEntity.ok(
-                ApiBasicResponse.of(
-                        responseDto,
-                        HttpStatus.OK
-                )
-        );
-    }
+//    @GetMapping("/members/{memberId}/{postId}/likes")
+//    @Operation(
+//            summary = "특정 회원이 글에 남긴 좋아요 조회",
+//            responses = {
+//                    @ApiResponse(
+//                            description = "조회 성공",
+//                            content = @Content(schema = @Schema(implementation = LikeDtoListSchema.class))
+//                    )
+//            }
+//    )
+//    public ResponseEntity<ApiBasicResponse<List<PostLikeDto>>> getPostLikesOfSingleMember(@PathVariable("memberId") Long memberId) {
+//        List<PostLikeDto> responseDto = this.likeService.getPostLikeOfMember(memberId);
+//        return ResponseEntity.ok(
+//                ApiBasicResponse.of(
+//                        responseDto,
+//                        HttpStatus.OK
+//                )
+//        );
+//    }
 
     @DeleteMapping("/likes/{likeId}")
     @Operation(

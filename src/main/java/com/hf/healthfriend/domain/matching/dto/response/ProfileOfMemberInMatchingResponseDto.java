@@ -1,9 +1,6 @@
 package com.hf.healthfriend.domain.matching.dto.response;
 
-import com.hf.healthfriend.domain.member.constant.CompanionStyle;
-import com.hf.healthfriend.domain.member.constant.FitnessEagerness;
-import com.hf.healthfriend.domain.member.constant.FitnessKind;
-import com.hf.healthfriend.domain.member.constant.FitnessLevel;
+import com.hf.healthfriend.domain.member.constant.*;
 import lombok.Builder;
 
 @Builder
@@ -15,6 +12,7 @@ public record ProfileOfMemberInMatchingResponseDto(
         CompanionStyle companionStyle,
         FitnessEagerness fitnessEagerness,
         FitnessKind fitnessKind,
+        FitnessObjective fitnessObjective,
         String cd1,
         String cd2,
         String cd3,

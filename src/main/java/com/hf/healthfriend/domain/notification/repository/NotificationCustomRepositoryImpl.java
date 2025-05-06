@@ -1,7 +1,7 @@
 package com.hf.healthfriend.domain.notification.repository;
 
-import com.hf.healthfriend.domain.notification.constant.NotificationGetType;
 import com.hf.healthfriend.domain.notification.constant.NotificationType;
+import com.hf.healthfriend.domain.notification.dto.NotificationListResponse;
 import com.hf.healthfriend.domain.notification.dto.NotificationResponse;
 import com.hf.healthfriend.domain.notification.entity.QNotification;
 import com.querydsl.core.BooleanBuilder;
@@ -18,38 +18,37 @@ public class NotificationCustomRepositoryImpl implements NotificationCustomRepos
     private final QNotification notification = QNotification.notification;
 
     @Override
-    public List<NotificationResponse> getList(NotificationGetType notificationGetType, Pageable pageable) {
-        BooleanBuilder builder = filter(notificationGetType);
-        return queryFactory
+    public NotificationListResponse getList(NotificationType notificationType, Pageable pageable) {
+        BooleanBuilder builder = filter(notificationType);
+        long totalElements = queryFactory
                 .selectFrom(notification)
                 .where(builder)
+                .fetch()
+                .size();
+        int totalPages = (int) ((totalElements + pageable.getPageSize() - 1) / pageable.getPageSize());
+        List<NotificationResponse> notificationResponses = queryFactory
+                .selectFrom(notification)
+                .where(builder)
+                .orderBy(notification.creationTime.desc())
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch()
                 .stream().map(notification-> NotificationResponse.builder()
                         .message(notification.getMessage())
-                        .type(notificationGetType)
+                        .type(notification.getType())
                         .time(notification.getCreationTime())
                         .targetId(notification.getTargetId())
                         .build()).toList();
+        return NotificationListResponse.builder()
+                .notificationResponseList(notificationResponses)
+                .totalPageSize(totalPages)
+                .build();
     }
 
-    public BooleanBuilder filter(NotificationGetType notificationGetType) {
+    public BooleanBuilder filter(NotificationType notificationType) {
         BooleanBuilder builder = new BooleanBuilder();
-        switch (notificationGetType) {
-            case COMMUNITY -> builder.and(
-                    notification.type.eq(NotificationType.ADD_COMMENT_TO_POST)
-                            .or(notification.type.eq(NotificationType.ADD_COMMENT_TO_COMMENT))
-                            .or(notification.type.eq(NotificationType.ADD_LIKE_TO_POST))
-                            .or(notification.type.eq(NotificationType.ADD_LIKE_TO_COMMENT))
-            );
-            case REVIEW -> builder.and(notification.type.eq(NotificationType.MATCH_END_REVIEW));
-            case MATCHING -> builder.and(
-                    notification.type.eq(NotificationType.MATCH_ACCEPT)
-                            .or(notification.type.eq(NotificationType.MATCH_REJECT))
-                            .or(notification.type.eq(NotificationType.MATCH_REQUEST))
-                            .or(notification.type.eq(NotificationType.MATCH_PUNK))
-            );
+        if (notificationType != null) {
+            builder.and(notification.type.eq(notificationType));
         }
         return builder;
     }

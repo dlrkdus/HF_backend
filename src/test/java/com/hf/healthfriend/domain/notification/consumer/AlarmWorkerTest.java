@@ -14,7 +14,7 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-class SseWorkerTest {
+class AlarmWorkerTest {
 
     @Mock
     private NotificationSSEService notificationSseService;
@@ -26,7 +26,7 @@ class SseWorkerTest {
     private JsonUtils jsonUtils;
 
     @InjectMocks
-    private SseWorker sseWorker;
+    private AlarmWorker alarmWorker;
 
     @Test
     void testConsumeAlarmMessage_Success() {
@@ -42,7 +42,7 @@ class SseWorkerTest {
         Mockito.when(messageGenerator.generateMessage(event)).thenReturn("Sse Worker Test");
 
         // When
-        sseWorker.consumeAlarmMessage(message);
+        alarmWorker.consumeAlarmMessage(message);
 
         // Then
         Mockito.verify(notificationSseService, Mockito.times(1)).send(1L, alarm);

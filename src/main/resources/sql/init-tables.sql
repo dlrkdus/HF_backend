@@ -67,6 +67,7 @@ CREATE TABLE members
     fitness_kind      ENUM ('HIGH_STRESS', 'FUNCTIONAL'), -- 추후 ENUM 값 수정
     review_score      DOUBLE                             DEFAULT 0.0,
     matched_count     BIGINT                             DEFAULT 0,
+    wished_count      BIGINT                             DEFAULT 0,
     is_deleted        BOOLEAN                            DEFAULT FALSE
 );
 
@@ -76,6 +77,8 @@ CREATE TABLE matching
     requester_id      BIGINT   NOT NULL,
     request_target_id BIGINT   NOT NULL,
     status            ENUM ('PENDING', 'ACCEPTED', 'REJECTED', 'FINISHED') DEFAULT 'PENDING',
+    meeting_place     VARCHAR(255) NOT NULL,
+    meeting_place_addr VARCHAR(255) NOT NULL,
     meeting_time      DATETIME NOT NULL,
     creation_time     DATETIME                                             DEFAULT NOW(),
     finish_time       DATETIME,
@@ -93,6 +96,7 @@ CREATE TABLE review
     last_modified DATETIME,
     score         INTEGER NOT NULL,
     FOREIGN KEY (reviewer_id) REFERENCES members (member_id),
+    FOREIGN KEY (reviewee_id) REFERENCES members (member_id),
     FOREIGN KEY (matching_id) REFERENCES matching (matching_id),
     CONSTRAINT score_range CHECK (score >= 1 AND score <= 5)
 );
@@ -122,13 +126,15 @@ CREATE TABLE spec
 CREATE TABLE post
 (
     post_id       BIGINT AUTO_INCREMENT PRIMARY KEY,
-    category      ENUM ('GYM_RECOMMENDATION', 'WORKOUT_CERTIFICATION', 'COUNSELING') NOT NULL,
+    category      ENUM ('FREE_COMMUNITY', 'COUNSELING') NOT NULL,
     writer_id     BIGINT                                                             NOT NULL,
     title         VARCHAR(50)                                                        NOT NULL,
     content       TEXT                                                               NOT NULL,
     creation_time DATETIME DEFAULT NOW(),
     last_modified DATETIME,
     likes_count   BIGINT   DEFAULT 0,
+    comments_count BIGINT DEFAULT 0,
+    image_path    VARCHAR(255),
     view_count    BIGINT   DEFAULT 0,
     is_deleted    BOOLEAN  DEFAULT FALSE,
     FOREIGN KEY (writer_id) REFERENCES members (member_id)
@@ -140,11 +146,13 @@ CREATE TABLE comment
     post_id       BIGINT NOT NULL,
     writer_id     BIGINT NOT NULL,
     content       TEXT   NOT NULL,
+    parent_comment_id BIGINT,
     creation_time DATETIME DEFAULT NOW(),
     last_modified DATETIME,
     is_deleted    BOOLEAN  DEFAULT FALSE,
     FOREIGN KEY (post_id) REFERENCES post (post_id),
-    FOREIGN KEY (writer_id) REFERENCES members (member_id)
+    FOREIGN KEY (writer_id) REFERENCES members (member_id),
+    FOREIGN KEY (parent_comment_id) REFERENCES comment (comment_id)
 );
 
 CREATE TABLE likes
@@ -166,30 +174,43 @@ CREATE TABLE chatroom
     chatroom_name VARCHAR(255) NOT NULL,
     creation_time DATETIME DEFAULT NOW(),
     thumbnail_url VARCHAR(255),
+    last_chat_message_id BIGINT,
     is_deleted    BOOLEAN  DEFAULT FALSE
 );
 
 CREATE TABLE chat_participation
 (
-    chat_participation_id BIGINT AUTO_INCREMENT PRIMARY KEY,
     chatroom_id           BIGINT NOT NULL,
-    participant_id        BIGINT NOT NULL,
+    member_id             BIGINT NOT NULL,
+    is_notification_active   BOOLEAN DEFAULT TRUE,
     is_disconnected       BOOLEAN DEFAULT FALSE,
+    PRIMARY KEY (chatroom_id, member_id),
     FOREIGN KEY (chatroom_id) REFERENCES chatroom (chatroom_id),
-    FOREIGN KEY (participant_id) REFERENCES members (member_id)
+    FOREIGN KEY (member_id) REFERENCES members (member_id)
 );
 
 CREATE TABLE chat_message
 (
     chat_message_id BIGINT AUTO_INCREMENT PRIMARY KEY,
     chatroom_id     BIGINT NOT NULL,
-    sender_id       BIGINT NOT NULL,
-    content         TEXT   NOT NULL,
+    member_id       BIGINT NOT NULL,
+    read_by_opponent BOOLEAN DEFAULT FALSE,
     creation_time   DATETIME DEFAULT NOW(),
-    is_deleted      BOOLEAN  DEFAULT FALSE,
+    last_modified   DATETIME DEFAULT NOW(),
+    image_url       VARCHAR(255),
+    meeting_time    VARCHAR(255),
+    meeting_place   VARCHAR(255),
+    meeting_place_address VARCHAR(255),
+    cancel_message  VARCHAR(255),
+    matching_response_type ENUM('ACCEPTED', 'REJECTED'),
+    text            TEXT,
+    message_type    VARCHAR(10) NOT NULL,
     FOREIGN KEY (chatroom_id) REFERENCES chatroom (chatroom_id),
-    FOREIGN KEY (sender_id) REFERENCES members (member_id)
+    FOREIGN KEY (member_id) REFERENCES members (member_id)
 );
+
+ALTER TABLE chatroom ADD CONSTRAINT chatroom_last_chat_message_fk FOREIGN KEY (last_chat_message_id)
+    REFERENCES chat_message (chat_message_id);
 
 CREATE TABLE chat_read
 (
@@ -203,13 +224,33 @@ CREATE TABLE chat_read
 CREATE TABLE notification
 (
     notification_id   BIGINT PRIMARY KEY AUTO_INCREMENT,
-    receiver_id       BIGINT       NOT NULL,
-    logo_image_url    VARCHAR(255),
-    title             VARCHAR(255) NOT NULL,
-    content           TEXT         NOT NULL,
-    notification_time DATETIME DEFAULT NOW(),
-    type              ENUM ('MATCHING'),
-    is_checked        BOOLEAN  DEFAULT FALSE,
-    is_deleted        BOOLEAN  DEFAULT FALSE,
-    FOREIGN KEY (receiver_id) REFERENCES members (member_id)
+    member_id       BIGINT       NOT NULL,
+    type VARCHAR(20) NOT NULL,
+    target_id       BIGINT       NOT NULL,
+    message         VARCHAR(255) NOT NULL,
+    creation_time   DATETIME DEFAULT NOW(),
+    last_modified   DATETIME DEFAULT NOW(),
+    is_read         BOOLEAN      DEFAULT FALSE,
+    FOREIGN KEY (member_id) REFERENCES members (member_id)
+);
+
+CREATE TABLE coupon (
+    coupon_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    receiver_id BIGINT NOT NULL,
+    expiration DATETIME NOT NULL,
+    create_time DATETIME DEFAULT NOW(),
+    is_used BOOLEAN DEFAULT FALSE,
+    is_read BOOLEAN DEFAULT FALSE,
+    achieved_level INTEGER NOT NULL,
+    granted_matching_count INTEGER,
+    left_matching_count INTEGER
+);
+
+CREATE TABLE wish (
+    wish_id    BIGINT PRIMARY KEY AUTO_INCREMENT,
+    wisher_id  BIGINT NOT NULL,
+    wished_id     BIGINT NOT NULL,
+    is_deleted BOOLEAN DEFAULT FALSE,
+    FOREIGN KEY (wisher_id) REFERENCES members (member_id),
+    FOREIGN KEY (wished_id) REFERENCES members (member_id)
 );

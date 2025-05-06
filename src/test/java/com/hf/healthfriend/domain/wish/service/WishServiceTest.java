@@ -2,7 +2,9 @@ package com.hf.healthfriend.domain.wish.service;
 
 import com.hf.healthfriend.domain.member.entity.Member;
 import com.hf.healthfriend.domain.member.repository.MemberRepository;
-import com.hf.healthfriend.domain.wish.dto.response.WishResponse;
+import com.hf.healthfriend.domain.wish.dto.request.WishRequestDto;
+import com.hf.healthfriend.domain.wish.dto.response.WishedListResponse;
+import com.hf.healthfriend.domain.wish.dto.response.WisherListResponse;
 import com.hf.healthfriend.domain.wish.entity.Wish;
 import com.hf.healthfriend.domain.wish.exception.WishException;
 import com.hf.healthfriend.domain.wish.repository.WishRepository;
@@ -44,15 +46,22 @@ class WishServiceTest {
     void testSaveWish_Success() {
         long wisherId = 1L;
         long wishedId = 2L;
+        Member wisher = new Member(wisherId);
+        Member wished = new Member(wishedId);
 
-        when(wishRepository.existsByWishedIdAndWisherId(wishedId, wisherId)).thenReturn(false);
-        when(memberRepository.existsById(wisherId)).thenReturn(true);
-        when(memberRepository.existsById(wishedId)).thenReturn(true);
+        // 중복 찜 여부 체크 (찜이 존재하지 않는다고 가정)
+        when(wishRepository.existsByWishedIdAndWisherIdAndIsDeletedFalse(wishedId, wisherId)).thenReturn(false);
 
-        Wish savedWish = new Wish(new Member(wisherId), new Member(wishedId));
+        // Member 조회 시 정상적으로 객체 반환하도록 설정
+        when(memberRepository.findById(wisherId)).thenReturn(Optional.of(wisher));
+        when(memberRepository.findById(wishedId)).thenReturn(Optional.of(wished));
+
+        // 찜 저장 시 반환 객체 설정
+        Wish savedWish = new Wish(wisher, wished);
         when(wishRepository.save(any(Wish.class))).thenReturn(savedWish);
 
-        Long wishId = wishService.save(wisherId, wishedId);
+        WishRequestDto wishRequestDto = new WishRequestDto(wisherId, wishedId);
+        Long wishId = wishService.save(wishRequestDto);
 
         verify(wishRepository, times(1)).save(any(Wish.class));
     }
@@ -63,10 +72,12 @@ class WishServiceTest {
         long wisherId = 1L;
         long wishedId = 2L;
 
-        when(wishRepository.existsByWishedIdAndWisherId(wishedId, wisherId)).thenReturn(true);
+        when(wishRepository.existsByWishedIdAndWisherIdAndIsDeletedFalse(wishedId, wisherId)).thenReturn(true);
+
+        WishRequestDto wishRequestDto = new WishRequestDto(1L,2L);
 
         WishException exception = assertThrows(WishException.class, () -> {
-            wishService.save(wisherId, wishedId);
+            wishService.save(wishRequestDto);
         });
 
         assertEquals(HttpStatus.BAD_REQUEST, exception.getHttpStatus());
@@ -79,11 +90,13 @@ class WishServiceTest {
         long wisherId = 1L;
         long wishedId = 2L;
 
-        when(wishRepository.existsByWishedIdAndWisherId(wishedId, wisherId)).thenReturn(false);
+        when(wishRepository.existsByWishedIdAndWisherIdAndIsDeletedFalse(wishedId, wisherId)).thenReturn(false);
         when(memberRepository.existsById(wisherId)).thenReturn(false);
 
+        WishRequestDto wishRequestDto = new WishRequestDto(1L,2L);
+
         WishException exception = assertThrows(WishException.class, () -> {
-            wishService.save(wisherId, wishedId);
+            wishService.save(wishRequestDto);
         });
 
         assertEquals(HttpStatus.BAD_REQUEST, exception.getHttpStatus());
@@ -93,30 +106,33 @@ class WishServiceTest {
     @Test
     @DisplayName("Soft Delete 테스트")
     void testDeleteWish_Success() {
-        long wishId = 1L;
-        Wish wish = new Wish();
+        Member wisher = Member.builder().id(1L).profileImageUrl(null).nickname(null).wishedCount(0L).build();
+        Member wished = Member.builder().id(2L).profileImageUrl(null).nickname(null).wishedCount(0L).build();
+        WishRequestDto wishRequestDto = new WishRequestDto(1L,2L);
 
-        when(wishRepository.findByWishIdAndIsDeletedFalse(wishId)).thenReturn(Optional.of(wish));
+        Wish wish = new Wish(wisher, wished);
 
-        wishService.delete(wishId);
+        when(wishRepository.findByWisherIdAndWishedIdAndIsDeletedFalse(1L,2L)).thenReturn(Optional.of(wish));
 
-        verify(wishRepository, times(1)).findByWishIdAndIsDeletedFalse(wishId);
+        wishService.delete(wishRequestDto);
+
+        verify(wishRepository, times(1)).findByWisherIdAndWishedIdAndIsDeletedFalse(1L,2L);
         assertTrue(wish.isDeleted());
     }
 
     @Test
     @DisplayName("존재하지 않는 찜을 삭제하려 할 때")
     void testDeleteWish_NotFound() {
-        long wishId = 1L;
+        WishRequestDto wishRequestDto = new WishRequestDto(1L,2L);
 
-        when(wishRepository.findByWishIdAndIsDeletedFalse(wishId)).thenReturn(Optional.empty());
+        when(wishRepository.findByWisherIdAndWishedIdAndIsDeletedFalse(1L,2L)).thenReturn(Optional.empty());
 
         WishException exception = assertThrows(WishException.class, () -> {
-            wishService.delete(wishId);
+            wishService.delete(wishRequestDto);
         });
 
         assertEquals(HttpStatus.BAD_REQUEST, exception.getHttpStatus());
-        verify(wishRepository, times(1)).findByWishIdAndIsDeletedFalse(wishId);
+        verify(wishRepository, times(1)).findByWisherIdAndWishedIdAndIsDeletedFalse(1L,2L);
     }
 
     @Test
@@ -134,7 +150,7 @@ class WishServiceTest {
 
         when(wishRepository.findAllByWisherIdAndIsDeletedFalse(memberId, pageable)).thenReturn(wishes);
 
-        List<WishResponse> wishedList = wishService.getWishedList(page, size, memberId);
+        List<WishedListResponse> wishedList = wishService.getWishedList(page, size, memberId);
 
         assertEquals(1, wishedList.size());
         verify(wishRepository, times(1)).findAllByWisherIdAndIsDeletedFalse(memberId, pageable);
@@ -155,7 +171,7 @@ class WishServiceTest {
 
         when(wishRepository.findAllByWishedIdAndIsDeletedFalse(memberId, pageable)).thenReturn(wishes);
 
-        List<WishResponse> wisherList = wishService.getWisherList(page, size, memberId);
+        List<WisherListResponse> wisherList = wishService.getWisherList(page, size, memberId);
 
         assertEquals(1, wisherList.size());
         verify(wishRepository, times(1)).findAllByWishedIdAndIsDeletedFalse(memberId, pageable);

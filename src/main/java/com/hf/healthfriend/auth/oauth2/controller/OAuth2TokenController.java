@@ -13,6 +13,7 @@ import com.hf.healthfriend.global.spec.schema.MemberResponseSchema;
 import com.hf.healthfriend.global.spec.schema.TokenRefreshResponseSchema;
 import com.hf.healthfriend.global.util.HttpCookieUtils;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.headers.Header;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -22,6 +23,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -157,5 +159,48 @@ public class OAuth2TokenController {
                         "당신이 누군지 알겠습니다"
                 )
         );
+    }
+
+    @DeleteMapping("/refresh-token")
+    @Operation(
+            summary = "로그아웃",
+            description = "Refresh Token을 저장하고 있는 쿠키를 삭제함으로써 로그아웃 + 그외 로그인 시 생성된 쿠키 삭제",
+            responses = {
+                    @ApiResponse(
+                            headers = {
+                                    @Header(
+                                            name = HttpHeaders.SET_COOKIE,
+                                            description = "Refresh Token을 담고 있는 쿠키를 삭제하기 위한 헤더"
+                                    ),
+                                    @Header(
+                                            name = HttpHeaders.SET_COOKIE,
+                                            description = "Access Token을 담고 있는 쿠키를 삭제하기 위한 헤더"
+                                    ),
+                                    @Header(
+                                            name = HttpHeaders.SET_COOKIE,
+                                            description = "email을 담고 있는 쿠키를 삭제하기 위한 헤더"
+                                    ),
+                                    @Header(
+                                            name = HttpHeaders.SET_COOKIE,
+                                            description = "is_new_member을 담고 있는 쿠키를 삭제하기 위한 헤더"
+                                    ),
+                                    @Header(
+                                            name = HttpHeaders.SET_COOKIE,
+                                            description = "name을 담고 있는 쿠키를 삭제하기 위한 헤더"
+                                    )
+                            }
+                    )
+            }
+    )
+    public ResponseEntity<Void> deleteRefreshToken() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.SET_COOKIE, this.httpCookieUtils.buildCookieInvalidator(CookieConstants.COOKIE_NAME_REFRESH_TOKEN.getString()).toString());
+        headers.add(HttpHeaders.SET_COOKIE, this.httpCookieUtils.buildCookieInvalidator(CookieConstants.COOKIE_NAME_ACCESS_TOKEN.getString()).toString());
+        headers.add(HttpHeaders.SET_COOKIE, this.httpCookieUtils.buildCookieInvalidator(CookieConstants.COOKIE_NAME_EMAIL.getString()).toString());
+        headers.add(HttpHeaders.SET_COOKIE, this.httpCookieUtils.buildCookieInvalidator(CookieConstants.COOKIE_NAME_IS_NEW_MEMBER.getString()).toString());
+        headers.add(HttpHeaders.SET_COOKIE, this.httpCookieUtils.buildCookieInvalidator(CookieConstants.COOKIE_NAME_NAME.getString()).toString());
+        return ResponseEntity.ok()
+                .headers(headers)
+                .build();
     }
 }

@@ -1,5 +1,6 @@
 package com.hf.healthfriend.testutil;
 
+import com.hf.healthfriend.domain.chat.entity.Chatroom;
 import com.hf.healthfriend.domain.matching.entity.Matching;
 import com.hf.healthfriend.domain.member.constant.*;
 import com.hf.healthfriend.domain.member.entity.Member;
@@ -95,5 +96,9 @@ public class SampleEntityGenerator {
                 new ReviewEvaluation(EvaluationType.NOT_GOOD, 1),
                 new ReviewEvaluation(EvaluationType.NOT_GOOD, 2)
         );
+    }
+
+    public static Chatroom generateSampleChatroom(Member... participants) {
+        return Chatroom.newChatroom(participants);
     }
 }

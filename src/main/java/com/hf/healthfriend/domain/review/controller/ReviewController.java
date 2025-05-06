@@ -33,11 +33,20 @@ public class ReviewController {
                             schema = @Schema(implementation = ReviewCreationRequestDto.class),
                             examples = @ExampleObject("""
                                     {
-                                      "matchingId": 10000,
-                                      "reviewerId": 20000,
-                                      "description": "샘플 리뷰",
-                                      "score": 3,
-                                      "evaluationType": "NOT_GOOD"
+                                        "matchingId": 1,
+                                        "reviewerId": 1,
+                                        "revieweeId": 2,
+                                        "score": 4,
+                                        "evaluations": [
+                                            {
+                                                "evaluationType": "GOOD",
+                                                "evaluationDetailId": 2
+                                            },
+                                            {
+                                                "evaluationType": "GOOD",
+                                                "evaluationDetailId": 3
+                                            }
+                                        ]
                                     }
                                     """)
                     )

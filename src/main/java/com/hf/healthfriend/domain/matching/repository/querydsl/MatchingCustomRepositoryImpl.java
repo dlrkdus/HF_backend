@@ -55,6 +55,7 @@ public class MatchingCustomRepositoryImpl implements MatchingCustomRepository {
                                         this.member.companionStyle,
                                         this.member.fitnessEagerness,
                                         this.member.fitnessKind,
+                                        this.member.fitnessObjective,
                                         this.member.cd1,
                                         this.member.cd2,
                                         this.member.cd3,
@@ -62,14 +63,14 @@ public class MatchingCustomRepositoryImpl implements MatchingCustomRepository {
                                 )
                         )
                 )
-                .from(this.matching);
+                .from(this.member);
 
         switch (matchingFetchType) {
-            case WHAT_I_RECEIVED -> query = query.innerJoin(this.member).on(this.member.eq(this.matching.requester));
+            case WHAT_I_RECEIVED -> query = query.innerJoin(this.matching).on(this.member.eq(this.matching.requester));
             case WHAT_I_REQUESTED ->
-                    query = query.innerJoin(this.member).on(this.member.eq(this.matching.targetMember));
-            case ALL -> query = query.innerJoin(this.member).on(this.member.eq(this.matching.requester)) // ALL 포함
-                    .innerJoin(this.member).on(this.member.eq(this.matching.targetMember));
+                    query = query.innerJoin(this.matching).on(this.member.eq(this.matching.targetMember));
+            case ALL ->
+                    query = query.innerJoin(this.matching).on(this.member.eq(this.matching.requester).or(this.member.eq(this.matching.targetMember))); // ALL 포함
         }
 
         BooleanBuilder queryCondition = generateQueryCondition(memberId, matchingFetchType, matchingStatusCondition);
@@ -79,27 +80,28 @@ public class MatchingCustomRepositoryImpl implements MatchingCustomRepository {
                 .offset(page.getOffset())
                 .fetch();
 
-        return PageableExecutionUtils.getPage(result, page, () ->
-                this.queryFactory.select(this.matching.count())
-                        .from(this.matching)
-                        .where(queryCondition)
-                        .fetchFirst()
+        return PageableExecutionUtils.getPage(result, page, () -> {
+                    JPAQuery<Long> countQuery = this.queryFactory.select(this.matching.count())
+                            .from(this.member);
+                    switch (matchingFetchType) {
+                        case WHAT_I_RECEIVED ->
+                                countQuery = countQuery.innerJoin(this.matching).on(this.member.eq(this.matching.requester));
+                        case WHAT_I_REQUESTED ->
+                                countQuery = countQuery.innerJoin(this.matching).on(this.member.eq(this.matching.targetMember));
+                        case ALL ->
+                                countQuery = countQuery.innerJoin(this.matching).on(this.member.eq(this.matching.requester).or(this.member.eq(this.matching.targetMember))); // ALL 포함
+                    }
+                    return countQuery.where(queryCondition)
+                            .fetchFirst();
+                }
+
         );
     }
 
     private BooleanBuilder generateQueryCondition(Long memberId,
                                                   MatchingFetchType matchingFetchType,
                                                   MatchingStatusCondition matchingStatus) {
-        BooleanBuilder builder = new BooleanBuilder();
-
-        switch (matchingFetchType) {
-            case WHAT_I_RECEIVED -> builder.or(this.matching.targetMember.id.eq(memberId));
-            case WHAT_I_REQUESTED -> builder.or(this.matching.requester.id.eq(memberId));
-            case ALL -> {
-                builder.or(this.matching.requester.id.eq(memberId));
-                builder.or(this.matching.targetMember.id.eq(memberId));
-            }
-        }
+        BooleanBuilder builder = new BooleanBuilder(this.member.id.ne(memberId));
 
         if (matchingStatus != MatchingStatusCondition.ALL) {
             builder.and(this.matching.status.in(matchingStatus.getCorrespondingStatus()));

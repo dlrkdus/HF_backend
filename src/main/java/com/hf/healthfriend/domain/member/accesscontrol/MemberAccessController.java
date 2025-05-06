@@ -44,11 +44,6 @@ public class MemberAccessController {
         return emailAttribute.equals(id.trim());
     }
 
-    @AccessControlTrigger(path = "/hr/members/{memberId}", method = "GET")
-    public boolean controlAccessToMemberInfo(BearerTokenAuthentication authentication, HttpServletRequest request) {
-        return accessControl(authentication, request);
-    }
-
     @AccessControlTrigger(path = "/hr/members/{memberId}", method = "PATCH")
     public boolean accessControlForUpdateMember(BearerTokenAuthentication authentication, HttpServletRequest request) {
         return accessControl(authentication, request);

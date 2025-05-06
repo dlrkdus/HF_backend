@@ -38,10 +38,12 @@ public class AccessDeniedExceptionResolverFilter extends OncePerRequestFilter {
         try {
             filterChain.doFilter(request, response);
         } catch (AccessDeniedException e) {
+            e.printStackTrace();
             // TODO: AccessDeniedException 종류를 여러 개
             writeErrorResponse(response);
             throw e;
         } catch (ServletException e) {
+            e.printStackTrace();
             Throwable cause = e.getCause();
             if (cause instanceof AccessDeniedException) {
                 writeErrorResponse(response);

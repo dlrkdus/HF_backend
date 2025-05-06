@@ -3,8 +3,9 @@ package com.hf.healthfriend.domain.wish.dto.response;
 import lombok.Builder;
 
 @Builder
-public record WishResponse(
+public record WishedListResponse(
         Long wishedId,
-        Long wisherId
+        String imageUrl,
+        String wishedNickname
 ) {
 }

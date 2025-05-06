@@ -1,8 +1,8 @@
 package com.hf.healthfriend.domain.member.repository;
 
 import com.hf.healthfriend.domain.member.constant.*;
-import com.hf.healthfriend.domain.member.dto.request.MembersRecommendRequest;
-import com.hf.healthfriend.domain.member.dto.response.MemberSearchResponse;
+import com.hf.healthfriend.domain.member.dto.request.MembersSearchRequest;
+import com.hf.healthfriend.domain.member.dto.response.MemberListResponse;
 import com.hf.healthfriend.domain.member.entity.Member;
 import com.hf.healthfriend.domain.member.repository.dto.ProfileQueryResultDto;
 import com.hf.healthfriend.domain.member.repository.querydsl.MemberCustomRepositoryImpl;
@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.context.annotation.Import;
@@ -36,6 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @Import(TestConfig.class)
 @DataJpaTest
 @Slf4j
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 public class MemberCustomRepositoryImlTest {
 
     @Autowired
@@ -50,15 +52,15 @@ public class MemberCustomRepositoryImlTest {
     @Autowired
     private TestEntityManager entityManager;
 
-    private MembersRecommendRequest request;
+    private MembersSearchRequest request;
 
     @BeforeEach
     public void setUp(){
-        request = MembersRecommendRequest.builder()
-                .companionStyleList(List.of(CompanionStyle.GROUP))
-                .fitnessKindList(List.of(FitnessKind.FUNCTIONAL))
-                .fitnessObjectiveList(List.of(FitnessObjective.RUNNING))
-                .fitnessEagernessList(null)
+        request = MembersSearchRequest.builder()
+                .companionStyles(List.of(String.valueOf(CompanionStyle.GROUP)))
+                .fitnessKinds(List.of(String.valueOf(FitnessKind.FUNCTIONAL)))
+                .fitnessObjectives(List.of(String.valueOf(FitnessObjective.RUNNING)))
+                .fitnessEagernesses(null)
                 .memberSortType(MemberSortType.MATCHING_COUNT)
                 .build();
         List<Member> members = new ArrayList<>();
@@ -94,25 +96,17 @@ public class MemberCustomRepositoryImlTest {
     }
 
     @Test
-    @DisplayName("enumToList test")
-    public void enumToListTest() {
-        List<String> fitnessTypeList = memberCustomRepository.fitnessTypesToList(request);
-        List<String> expectedList = List.of("GROUP","FUNCTIONAL","RUNNING");
-        assertEquals(expectedList, fitnessTypeList);
-    }
-
-    @Test
     @DisplayName("filtering test")
     public void filteringTest() {
         // Given
-        BooleanBuilder builder = memberCustomRepository.filter(request);
+        BooleanBuilder builder = memberCustomRepository.filter(null,request);
         // When
         Predicate predicate = builder.getValue();
         // Then
-        assertThat(predicate.toString()).contains("member1.companionStyle = GROUP");
-        assertThat(predicate.toString()).contains("member1.fitnessKind = FUNCTIONAL");
-        assertThat(predicate.toString()).contains("member1.fitnessObjective = RUNNING");
-        assertThat(predicate.toString()).doesNotContain("member1.fitnessEagerness = EAGER");
+        assertThat(predicate.toString()).contains("str(member1.companionStyle) = GROUP");
+        assertThat(predicate.toString()).contains("str(member1.fitnessKind) = FUNCTIONAL");
+        assertThat(predicate.toString()).contains("str(member1.fitnessObjective) = RUNNING");
+        assertThat(predicate.toString()).doesNotContain("str(member1.fitnessEagerness) = EAGER");
     }
 
     @Test
@@ -121,15 +115,15 @@ public class MemberCustomRepositoryImlTest {
         //Given
         String keyword = "VirtualNicknameB";
         Pageable pageable = PageRequest.of(0, 10);
+        MembersSearchRequest new_request = MembersSearchRequest.builder()
+                .build();
 
         //When
-        List<MemberSearchResponse> searchedProfileList = memberCustomRepository.searchMembers(keyword, pageable);
+        List<MemberListResponse> searchedProfileList = memberCustomRepository.searchMembers(keyword,new_request, pageable);
 
         //Then
         assertEquals(1, searchedProfileList.size());
         assertEquals("This is a virtual member2",searchedProfileList.get(0).getIntroduction());
-        assertEquals(1,searchedProfileList.get(0).getFollowerCount());
-
     }
 
     @DisplayName("findByMemberId - success")

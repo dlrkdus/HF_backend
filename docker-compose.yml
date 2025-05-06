@@ -1,0 +1,83 @@
+services:
+  spring:
+    build: .
+    image: spring:latest
+    container_name: spring-container
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod,secret,constants,priv
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_REGION=${AWS_REGION}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_SQS_ALARM_QUEUE_URL=${AWS_SQS_ALARM_QUEUE_URL}
+      - REDIS_HOST=redis://redis-container:6379
+      - JDBC_URL=${JDBC_URL}
+      - JDBC_USERNAME=${JDBC_USERNAME}
+      - JDBC_PASSWORD=${JDBC_PASSWORD}
+      - S3_BUCKET=${S3_BUCKET}
+      - KAKAO_CLIENT_ID=${KAKAO_CLIENT_ID}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+    networks:
+      - app-network
+      - hf-net
+    depends_on:
+      redis:
+        condition: service_started
+
+  redis:
+    image: redis:latest
+    container_name: redis-container
+    ports:
+      - "6379:6379"
+    networks:
+      - app-network
+  nginx:
+    image: nginx:latest
+    container_name: nginx-container
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /home/ubuntu/app/nginx/conf.d:/etc/nginx/conf.d
+      - /home/ubuntu/app/nginx/certbot/www:/var/www/certbot
+      - /home/ubuntu/app/nginx/certbot/conf:/etc/letsencrypt
+    depends_on:
+      - spring
+    networks:
+      - app-network
+      - hf-net
+  certbot:
+    image: certbot/certbot
+    container_name: certbot-container
+    volumes:
+      - /home/ubuntu/app/nginx/certbot/www:/var/www/certbot
+      - /home/ubuntu/app/nginx/certbot/conf:/etc/letsencrypt
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do sleep 6h & wait $${!}; certbot renew --webroot -w /var/www/certbot --quiet; done'"
+    networks:
+      - app-network
+
+  # mysql:
+  #   image: mysql:8.0.40
+  #   container_name: mysql-container
+  #   ports:
+  #     - "3306:3306"
+  #     - "33060:33060"
+  #   environment:
+  #     - MYSQL_ROOT_PASSWORD=1111
+  #     - MYSQL_DATABASE=hf
+  #   networks:
+  #     - app-network
+  #   healthcheck:
+  #     test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "--password=1111"]
+  #     interval: 10s
+  #     timeout: 30s
+  #     retries: 5
+  #     start_period: 10s
+
+networks:
+  app-network:
+    driver: bridge
+  hf-net:
+    external: true

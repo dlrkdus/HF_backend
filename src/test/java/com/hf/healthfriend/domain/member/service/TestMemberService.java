@@ -9,7 +9,6 @@ import com.hf.healthfriend.domain.member.dto.request.MemberUpdateRequestDto;
 import com.hf.healthfriend.domain.member.dto.response.MemberCreationResponseDto;
 import com.hf.healthfriend.domain.member.dto.response.ProfileResponseDto;
 import com.hf.healthfriend.domain.member.entity.Member;
-import com.hf.healthfriend.domain.member.exception.FitnessLevelUpdateException;
 import com.hf.healthfriend.domain.member.exception.MemberNotFoundException;
 import com.hf.healthfriend.domain.member.repository.MemberRepository;
 import com.hf.healthfriend.domain.review.constants.EvaluationType;
@@ -121,7 +120,7 @@ class TestMemberService {
 
         assertThat(responseDto.getSpecIds()).size().isNotZero();
 
-        Member member = this.memberRepository.findByEmail("sample@gmail.com").orElseThrow();
+        Member member = this.memberRepository.findNotDeletedMemberByEmail("sample@gmail.com").orElseThrow();
 
         log.info("Member from repository={}", member);
 

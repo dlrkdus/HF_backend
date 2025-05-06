@@ -75,6 +75,7 @@ dependencies {
     implementation platform("io.awspring.cloud:spring-cloud-aws-dependencies:3.0.1")
     implementation 'io.awspring.cloud:spring-cloud-aws-starter-sqs'
     implementation 'io.awspring.cloud:spring-cloud-aws-starter-sns'
+    implementation("io.awspring.cloud:spring-cloud-aws-starter-s3")
 
     // Mysql
     runtimeOnly 'com.mysql:mysql-connector-j'

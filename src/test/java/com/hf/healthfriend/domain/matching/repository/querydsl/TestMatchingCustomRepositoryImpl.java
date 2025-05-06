@@ -6,6 +6,7 @@ import com.hf.healthfriend.domain.matching.constant.MatchingStatusCondition;
 import com.hf.healthfriend.domain.matching.dto.response.MatchingListResponseDto;
 import com.hf.healthfriend.domain.matching.entity.Matching;
 import com.hf.healthfriend.domain.member.entity.Member;
+import com.hf.healthfriend.testutil.MysqlTestcontainerConfig;
 import com.hf.healthfriend.testutil.SampleEntityGenerator;
 import com.hf.healthfriend.testutil.TestConfig;
 import jakarta.persistence.EntityManager;
@@ -35,7 +36,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@Import(TestConfig.class)
+@Import({
+        TestConfig.class,
+        MysqlTestcontainerConfig.class
+})
 @Slf4j
 class TestMatchingCustomRepositoryImpl {
 
