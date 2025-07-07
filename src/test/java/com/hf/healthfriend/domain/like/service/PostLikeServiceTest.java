@@ -1,12 +1,10 @@
 package com.hf.healthfriend.domain.like.service;
 
-import com.hf.healthfriend.domain.comment.entity.Comment;
 import com.hf.healthfriend.domain.comment.repository.CommentRepository;
 import com.hf.healthfriend.domain.like.dto.PostLikeDto;
 import com.hf.healthfriend.domain.like.exception.DuplicatePostLikeException;
 import com.hf.healthfriend.domain.like.exception.PostOrMemberNotExistsException;
 import com.hf.healthfriend.domain.like.repository.LikeRepository;
-import com.hf.healthfriend.domain.member.constant.*;
 import com.hf.healthfriend.domain.member.entity.Member;
 import com.hf.healthfriend.domain.member.repository.MemberRepository;
 import com.hf.healthfriend.domain.post.constant.PostCategory;
@@ -31,7 +29,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;

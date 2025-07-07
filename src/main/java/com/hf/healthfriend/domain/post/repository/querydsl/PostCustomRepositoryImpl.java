@@ -47,19 +47,12 @@ public class PostCustomRepositoryImpl implements PostCustomRepository {
     }
 
     @Override
-    public List<PostListObject> getPopularList(List<Long> postIdList, FitnessLevel fitnessLevel, String keyword, Pageable pageable) {
+    public List<PostListObject> getPopularList(List<Long> postIdList, FitnessLevel fitnessLevel, String keyword) {
         BooleanBuilder builder = filter(fitnessLevel, null, keyword);
-        OrderSpecifier<?>[] orderSpecifier = new OrderSpecifier<?>[]{
-                new OrderSpecifier<>(Order.DESC, post.likesCount),
-                new OrderSpecifier<>(Order.DESC, post.creationTime)
-        };
 
         List<Post> posts = queryFactory
                 .selectFrom(post)
                 .where(post.postId.in(postIdList).and(builder))
-                .orderBy(orderSpecifier)
-                .offset(pageable.getOffset())
-                .limit(pageable.getPageSize())
                 .fetch();
 
         return convertPostsToDto(posts, keyword);

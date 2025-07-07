@@ -61,7 +61,7 @@ dependencies {
     annotationProcessor "jakarta.persistence:jakarta.persistence-api"
 
     //Redis
-    implementation 'org.redisson:redisson-spring-boot-starter:3.18.1'
+    implementation 'org.redisson:redisson:3.18.0'
 
     testCompileOnly 'org.projectlombok:lombok'
     testAnnotationProcessor 'org.projectlombok:lombok'
@@ -76,8 +76,10 @@ dependencies {
     implementation 'io.awspring.cloud:spring-cloud-aws-starter-sqs'
     implementation 'io.awspring.cloud:spring-cloud-aws-starter-sns'
     implementation("io.awspring.cloud:spring-cloud-aws-starter-s3")
+    implementation 'software.amazon.awssdk:apache-client'
 
     // Mysql
+    implementation 'mysql:mysql-connector-java:8.0.33'
     runtimeOnly 'com.mysql:mysql-connector-j'
 
     // Embedded Database

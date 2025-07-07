@@ -5,7 +5,6 @@ import com.hf.healthfriend.domain.comment.entity.Comment;
 import com.hf.healthfriend.domain.comment.repository.querydsl.CommentCustomRepositoryImpl;
 import com.hf.healthfriend.domain.like.constant.LikeType;
 import com.hf.healthfriend.domain.like.entity.Like;
-import com.hf.healthfriend.domain.member.constant.*;
 import com.hf.healthfriend.domain.member.entity.Member;
 import com.hf.healthfriend.domain.member.repository.MemberRepository;
 import com.hf.healthfriend.domain.post.entity.Post;
@@ -14,7 +13,6 @@ import com.hf.healthfriend.global.file.FileUrlResolver;
 import com.hf.healthfriend.testutil.SampleEntityGenerator;
 import com.hf.healthfriend.testutil.TestConfig;
 import jakarta.transaction.Transactional;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -25,9 +23,6 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;

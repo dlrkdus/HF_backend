@@ -26,8 +26,8 @@ spring:
         org.hibernate.type.descriptor.sql.BasicBinder: TRACE
 
   datasource:
-    driver-class-name: com.mysql.jdbc.Driver
     url: jdbc:mysql://localhost:3306/hf
+    driver-class-name: com.mysql.cj.jdbc.Driver
     # username과 password는 Local 개발 환경이므로 편의상 공개해 놓음
     # 배포 환경에서는 application-secret.yml 파일에 저장
     username: root
@@ -102,7 +102,7 @@ aws:
     topicArn: arn:aws:sns:ap-northeast-2:676206915972:hf-notification
   sqs:
     alarmQueueUrl: ${AWS_SQS_ALARM_QUEUE_URL}
-    dbQueueUrl: ${AWS_SQS_DB_QUEUE_URL}
+    alarmDlqUrl: ${AWS_SQS_ALARM_DLQ_URL}
 
 secret:
   oauth2:

@@ -18,10 +18,9 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(indexes = {
-        @Index(name = "post_creation_time_idx", columnList = "creation_time"),
-        @Index(name = "post_category_idx", columnList = "category"),
         @Index(name = "post_member_id_idx", columnList = "writer_id")
 })
+@Description("개별 쓰기와 수정, 읽기만 담당하는 원본 Post 테이블")
 public class Post extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -2,6 +2,7 @@ package com.hf.healthfriend.global.config;
 
 import io.awspring.cloud.sqs.config.SqsMessageListenerContainerFactory;
 import jakarta.annotation.PostConstruct;
+import java.time.Duration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -9,30 +10,36 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.env.Environment;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
+import software.amazon.awssdk.http.apache.ApacheHttpClient;
 import software.amazon.awssdk.regions.Region;
 
 import software.amazon.awssdk.services.sqs.SqsAsyncClient;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
+import software.amazon.awssdk.services.sqs.SqsClient;
 
 @Configuration
 public class AWSConfig {
     @Value("${aws.region}")
     private String region;
 
-    @Autowired
-    private Environment environment;
-
-    @PostConstruct
-    public void checkEnvironmentVariables() {
-        System.out.println("AWS_ACCESS_KEY_ID: " + environment.getProperty("AWS_ACCESS_KEY_ID"));
-        System.out.println("AWS_SECRET_ACCESS_KEY: " + environment.getProperty("AWS_SECRET_ACCESS_KEY"));
+    @Bean
+    public SqsAsyncClient sqsAsyncClient() {
+        return SqsAsyncClient.builder()
+                .region(Region.of(region))
+                .credentialsProvider(DefaultCredentialsProvider.create())
+                .build();
     }
 
     @Bean
-    public SqsAsyncClient sqsClient() {
-        return SqsAsyncClient.builder()
+    public SqsClient sqsClient() {
+        return SqsClient.builder()
                 .region(Region.of(region))
+                .httpClientBuilder(
+                        ApacheHttpClient.builder()
+                                .connectionTimeout(Duration.ofSeconds(5)) // 연결 수립 타임아웃
+                                .socketTimeout(Duration.ofSeconds(5))   // 데이터 전송/수신 타임아웃
+                )
                 .credentialsProvider(DefaultCredentialsProvider.create())
                 .build();
     }
@@ -46,7 +53,7 @@ public class AWSConfig {
                                 .maxConcurrentMessages(10) // 컨테이너의 스레드 풀 크기
                                 .maxMessagesPerPoll(10) // 한 번의 폴링 요청으로 수신할 수 있는 최대 메시지 수를 지정
                 )
-                .sqsAsyncClient(sqsClient())
+                .sqsAsyncClient(sqsAsyncClient())
                 .build();
     }
 

@@ -18,9 +18,13 @@ import com.hf.healthfriend.domain.post.exception.PostErrorCode;
 import com.hf.healthfriend.domain.post.exception.PostException;
 import com.hf.healthfriend.domain.post.repository.PostRepository;
 import com.hf.healthfriend.global.file.FileUrlResolver;
+import com.hf.healthfriend.global.util.ExecutionTime;
 import jakarta.transaction.Transactional;
 import java.time.Duration;
-import java.util.concurrent.TimeUnit;
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RAtomicLong;
@@ -48,6 +52,7 @@ public class PostService {
 
     private final FileUrlResolver fileUrlResolver;
 
+    @ExecutionTime
     public Long save(PostWriteRequest postWriteRequest){
         Long memberId = postWriteRequest.getWriterId();
         Member member = memberRepository.findById(memberId)
@@ -97,13 +102,33 @@ public class PostService {
     }
 
     public PostSearchResponse getPopularList(int pageNumber, int size, FitnessLevel fitnessLevel, String keyword) {
-        Pageable pageable = PageRequest.of(pageNumber - 1, size);
         RScoredSortedSet<Long> sortedSet = redissonClient.getScoredSortedSet("popular_posts");
-        List<Long> postIdList = new ArrayList<>( sortedSet.readAll().stream().toList());
-        Long totalPageSize = (long) (postIdList.size() / size);
-        List<PostListObject> popularPostList = postRepository.getPopularList(postIdList,fitnessLevel,keyword,pageable);
+
+        long totalCount = sortedSet.size();
+        long totalPageSize = (long) Math.ceil((double) totalCount / size);
+
+        // Pageable 로 넘기지 않고 미리 페이징을 하는 이유는?
+        // 테이블에서 pageable 로 자를게 아니라, 정렬된 sortedSet 에서 잘라야 하기 때문.
+        int fromIndex = (pageNumber - 1) * size;
+        int toIndex = Math.min(fromIndex + size, (int) totalCount);
+
+        // ZREVRANGE 를 써서 필요한 인기글 데이터만 메모리에 올리기.
+        List<Long> pagePostIds = new ArrayList<>(sortedSet.valueRangeReversed(fromIndex, toIndex - 1));
+
+        List<PostListObject> unorderedPosts = postRepository.getPopularList(pagePostIds, fitnessLevel, keyword);
+
+        // IN 키워드를 쓰는 순간 정렬은 무너짐, 어플리케이션 단에서 재정렬해줘야 함.
+        // 하지만 size 가 10이므로, 재정렬 비용이 크지 않음.
+        Map<Long, PostListObject> postMap = unorderedPosts.stream()
+                .collect(Collectors.toMap(PostListObject::postId, Function.identity()));
+
+        List<PostListObject> orderedPosts = pagePostIds.stream()
+                .map(postMap::get)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+
         return PostSearchResponse.builder()
-                .postList(popularPostList)
+                .postList(orderedPosts)
                 .totalPageSize(totalPageSize)
                 .build();
     }

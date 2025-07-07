@@ -1,9 +1,7 @@
 package com.hf.healthfriend.domain.search.service;
 
-import com.hf.healthfriend.domain.member.dto.response.MemberListResponse;
 import com.hf.healthfriend.domain.member.dto.response.MemberSearchResponse;
 import com.hf.healthfriend.domain.member.service.MemberService;
-import com.hf.healthfriend.domain.post.dto.response.PostListObject;
 import com.hf.healthfriend.domain.post.dto.response.PostSearchResponse;
 import com.hf.healthfriend.domain.post.repository.PostRepository;
 import com.hf.healthfriend.domain.post.service.PostService;

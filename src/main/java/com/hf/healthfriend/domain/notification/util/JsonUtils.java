@@ -22,7 +22,15 @@ public class JsonUtils {
     public NotificationEvent deserializeMessage(String message) {
         try {
             log.info("수신된 메시지: {}", message);
+
+            // 1단계: 내부 JSON 문자열을 꺼냄
+            if (message.startsWith("\"") && message.endsWith("\"")) {
+                message = objectMapper.readValue(message, String.class);  // 한 번 더 파싱
+            }
+
+            // 2단계: 실제 NotificationEvent 객체로 변환
             return objectMapper.readValue(message, NotificationEvent.class);
+
         } catch (JsonProcessingException e) {
             throw new RuntimeException("메시지 역직렬화 실패: " + e.getMessage(), e);
         }

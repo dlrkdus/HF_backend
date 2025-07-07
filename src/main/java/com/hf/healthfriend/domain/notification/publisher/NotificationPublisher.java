@@ -1,14 +1,17 @@
 package com.hf.healthfriend.domain.notification.publisher;
 
-import com.hf.healthfriend.domain.notification.constant.NotificationType;
+import com.hf.healthfriend.domain.notification.constant.MessageStatus;
 import com.hf.healthfriend.domain.notification.dto.NotificationEvent;
+import com.hf.healthfriend.domain.notification.service.NotificationService;
 import com.hf.healthfriend.domain.notification.util.JsonUtils;
+import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.support.TransactionSynchronization;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
+import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.services.sqs.SqsAsyncClient;
 
 @Component
@@ -18,27 +21,35 @@ public class NotificationPublisher {
 
     private final SqsAsyncClient sqsAsyncClient;
     private final JsonUtils jsonUtils;
-
     @Value("${aws.sqs.alarmQueueUrl}")
     private String alarmQueueUrl;
+    private final NotificationService notificationService;
 
-    public void publishNotification(Long memberId, NotificationType type, String actor, Long targetId) {
-        NotificationEvent event = new NotificationEvent(memberId, type, actor, targetId);
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void publishNotification(NotificationEvent event) {
         String message = jsonUtils.serialize(event);
+        sendMessage(event, message);
+    }
 
-        // 트랜잭션이 커밋된 이후에 실행되도록 등록
-        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-            @Override
-            public void afterCommit() {
-                sqsAsyncClient.sendMessage(builder -> builder
+    private void sendMessage(NotificationEvent event, String message) {
+        sqsAsyncClient.sendMessage(builder -> builder
                         .queueUrl(alarmQueueUrl)
                         .messageBody(message)
-                );
-
-                log.info("SQS에 알림 이벤트 퍼블리싱 (트랜잭션 커밋 후): memberId={}, type={}, actor={}, targetId={}",
-                        memberId, type, actor, targetId);
-            }
-        });
+                )
+                .orTimeout(3, TimeUnit.SECONDS) // 3초 타임아웃
+                .whenComplete((res, throwable) -> {
+                    if (throwable != null) {
+                        notificationService.updateMessageStatusIfNotSuccess(event.getNotificationId(), MessageStatus.FAILED);
+                        if (throwable instanceof SdkClientException){
+                            log.warn("SQS 전송 실패(타임아웃) attempt={}", throwable.getMessage());
+                        }else{
+                            log.warn("SQS 전송 실패 attempt={}", throwable.getMessage());
+                        }
+                    } else {
+                        notificationService.updateMessageStatus(event.getNotificationId(), MessageStatus.SUCCESS);
+                        log.info("SQS 전송 성공: messageId={}, notificationId={}",
+                                res.messageId(), event.getNotificationId());
+                    }
+                });
     }
 }
-
