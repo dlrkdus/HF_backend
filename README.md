@@ -17,7 +17,7 @@
 - Tech Stack
   - Java, Spring Boot, MySQL, JPA, QueryDSL, Redis, JUnit
 - Infra
-  - AWS EC2, AWS RDS, AWS ElasticCache, AWS SQS, AWS SNS
+  - AWS EC2, AWS RDS, AWS SQS
 - DevOps
   - Jenkins, Docker
  
