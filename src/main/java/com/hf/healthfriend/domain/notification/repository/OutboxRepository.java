@@ -13,6 +13,7 @@ public interface OutboxRepository extends JpaRepository<Outbox, Long> {
     @Query("UPDATE Outbox o SET o.status = :messageStatus WHERE o.notificationId = :notificationId")
     void updateMessageStatus(@Param("notificationId") String notificationId, @Param("messageStatus") MessageStatus messageStatus);
 
+    @Modifying
     @Query("UPDATE Outbox o SET o.status = :messageStatus WHERE o.notificationId = :notificationId AND o.status <> 'SUCCESS'")
     void updateMessageStatusIfNotSuccess(@Param("notificationId") String notificationId, @Param("messageStatus") MessageStatus messageStatus);
 

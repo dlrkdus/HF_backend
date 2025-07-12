@@ -75,14 +75,7 @@ public class AlarmWorker {
     }
 
     private void saveAlarm(NotificationEvent event, String alarmMessage, Long memberId){
-        Notification notification = Notification.builder()
-                .memberId(memberId)
-                .type(event.getType())
-                .targetId(event.getTargetId())
-                .message(alarmMessage)
-                .isRead(false)
-                .build();
-        notificationRepository.save(notification);
+        notificationRepository.saveAlarm(memberId,event.getType().name(), event.getTargetId(), alarmMessage);
         log.info("DB 저장 완료: {}", event);
     }
 }
